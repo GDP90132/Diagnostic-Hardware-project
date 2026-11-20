@@ -119,18 +119,18 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  char buf[32];
-	  for (int i = 0x08; i <= 0x77; i++){
-		  if ( HAL_OK == HAL_I2C_IsDeviceReady(&hi2c1, i << 1, 1 ,10)) {
-			  snprintf(buf,sizeof(buf), "found 0x%02X\r\n", i);
-			  uart_send_string(buf);
+	  uint8_t id = 0;
+	  HAL_StatusTypeDef status = HAL_I2C_Mem_Read(&hi2c1, 0x77 << 1, 0xD0,
+	                                              I2C_MEMADD_SIZE_8BIT, &id, 1, 100);
+
+	  char idbuf[48];
+	  snprintf(idbuf, sizeof(idbuf), "BMP280 status=%d id=0x%02X\r\n", status, id);
+	  uart_send_string(idbuf);
 
 
 
 
-		  }
 
-	  }
 
 	  if (tick_flag){
 
