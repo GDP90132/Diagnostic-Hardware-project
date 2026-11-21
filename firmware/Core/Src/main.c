@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include "bmp280.h"
 #include <stdio.h>
+#include "aht20.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -110,54 +111,61 @@ int main(void)
   MX_TIM2_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
+  /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim2);
+
   if (BMP280_Init(&hi2c1) == HAL_OK) uart_send_string("BMP280 init OK\r\n");
   else uart_send_string("BMP280 init FAILED\r\n");
 
-  const BMP280_Calib *c = BMP280_GetCalib();
-  char cbuf[64];
-  snprintf(cbuf, sizeof(cbuf), "T1=%u T2=%d T3=%d P1=%u\r\n",
-           c->dig_T1, c->dig_T2, c->dig_T3, c->dig_P1);
-  uart_send_string(cbuf);
-  int32_t rawT, rawP;
-  if (BMP280_ReadRaw(&hi2c1, &rawT, &rawP) == HAL_OK)
-  {
-      snprintf(cbuf, sizeof(cbuf), "rawT=%ld rawP=%ld\r\n", (long)rawT, (long)rawP);
-      uart_send_string(cbuf);
-  }
-  else uart_send_string("BMP280 read FAILED\r\n");
-  int32_t t = BMP280_CompensateTemp(rawT);
-  snprintf(cbuf, sizeof(cbuf), "T=%ld.%02ld C\r\n", (long)(t / 100), (long)(t % 100));
-  uart_send_string(cbuf);
+  if (AHT20_Init(&hi2c1) == HAL_OK) uart_send_string("AHT20 init OK\r\n");
+  else uart_send_string("AHT20 init FAILED\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  /* USER CODE BEGIN 3 */
+	  if (tick_flag)
+	  {
+	      tick_flag = 0;
+	      uptime++;
+	      HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 
+	      int32_t rawT, rawP, at, ah;
+	      char line[96];
 
+	      if (BMP280_ReadRaw(&hi2c1, &rawT, &rawP) == HAL_OK &&
+	          AHT20_Read(&hi2c1, &at, &ah) == HAL_OK)
+	      {
+	          int32_t bt = BMP280_CompensateTemp(rawT);          // must come before pressure
+	          uint32_t pa = BMP280_CompensatePress(rawP) / 256;  // Pa
 
-
-
-
-
-	  if (tick_flag){
-
-		  tick_flag = 0;
-		  uptime++;
-		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-
-		  char buf[32];
-		  snprintf(buf, sizeof(buf), "uptime: %lu\r\n", uptime);
-		  uart_send_string(buf);
-
-
-
+	          snprintf(line, sizeof(line),
+	                   "T=%ld.%02ld C  H=%ld.%ld %%  P=%lu.%lu hPa  (BMP T=%ld.%02ld C)\r\n",
+	                   (long)(at / 100), (long)(at % 100),
+	                   (long)(ah / 100), (long)((ah % 100) / 10),
+	                   (unsigned long)(pa / 100), (unsigned long)((pa % 100) / 10),
+	                   (long)(bt / 100), (long)(bt % 100));
+	      }
+	      else
+	      {
+	          snprintf(line, sizeof(line), "sensor read FAILED\r\n");
+	      }
+	      uart_send_string(line);
 	  }
+	  /* USER CODE END 3 */
+
+
+
+
+
+
+
 
 
   }
