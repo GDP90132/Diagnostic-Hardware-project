@@ -113,6 +113,19 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim2);
   if (BMP280_Init(&hi2c1) == HAL_OK) uart_send_string("BMP280 init OK\r\n");
   else uart_send_string("BMP280 init FAILED\r\n");
+
+  const BMP280_Calib *c = BMP280_GetCalib();
+  char cbuf[64];
+  snprintf(cbuf, sizeof(cbuf), "T1=%u T2=%d T3=%d P1=%u\r\n",
+           c->dig_T1, c->dig_T2, c->dig_T3, c->dig_P1);
+  uart_send_string(cbuf);
+  int32_t rawT, rawP;
+  if (BMP280_ReadRaw(&hi2c1, &rawT, &rawP) == HAL_OK)
+  {
+      snprintf(cbuf, sizeof(cbuf), "rawT=%ld rawP=%ld\r\n", (long)rawT, (long)rawP);
+      uart_send_string(cbuf);
+  }
+  else uart_send_string("BMP280 read FAILED\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
