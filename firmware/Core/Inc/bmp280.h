@@ -34,6 +34,6 @@ const BMP280_Calib *BMP280_GetCalib(void);
 
 HAL_StatusTypeDef BMP280_Init(I2C_HandleTypeDef *hi2c);
 HAL_StatusTypeDef BMP280_ReadRaw(I2C_HandleTypeDef *hi2c, int32_t *adc_T, int32_t *adc_P);
-
+int32_t BMP280_CompensateTemp(int32_t adc_T);
 #endif
 

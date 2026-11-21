@@ -65,3 +65,16 @@ HAL_StatusTypeDef BMP280_ReadRaw(I2C_HandleTypeDef *hi2c, int32_t *adc_T, int32_
     *adc_T = ((int32_t)d[3] << 12) | ((int32_t)d[4] << 4) | (d[5] >> 4);
     return HAL_OK;
 }
+
+static int32_t t_fine;
+
+int32_t BMP280_CompensateTemp(int32_t adc_T)
+{
+    int32_t var1, var2;
+    var1 = ((((adc_T >> 3) - ((int32_t)cal.dig_T1 << 1))) * ((int32_t)cal.dig_T2)) >> 11;
+    var2 = (((((adc_T >> 4) - ((int32_t)cal.dig_T1)) *
+              ((adc_T >> 4) - ((int32_t)cal.dig_T1))) >> 12) *
+            ((int32_t)cal.dig_T3)) >> 14;
+    t_fine = var1 + var2;
+    return (t_fine * 5 + 128) >> 8;   // temperature in 0.01 °C
+}

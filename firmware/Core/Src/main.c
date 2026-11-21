@@ -126,6 +126,9 @@ int main(void)
       uart_send_string(cbuf);
   }
   else uart_send_string("BMP280 read FAILED\r\n");
+  int32_t t = BMP280_CompensateTemp(rawT);
+  snprintf(cbuf, sizeof(cbuf), "T=%ld.%02ld C\r\n", (long)(t / 100), (long)(t % 100));
+  uart_send_string(cbuf);
   /* USER CODE END 2 */
 
   /* Infinite loop */
