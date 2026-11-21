@@ -21,6 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "bmp280.h"
 #include <stdio.h>
 /* USER CODE END Includes */
 
@@ -110,6 +111,8 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim2);
+  if (BMP280_Init(&hi2c1) == HAL_OK) uart_send_string("BMP280 init OK\r\n");
+  else uart_send_string("BMP280 init FAILED\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -119,13 +122,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  uint8_t id = 0;
-	  HAL_StatusTypeDef status = HAL_I2C_Mem_Read(&hi2c1, 0x77 << 1, 0xD0,
-	                                              I2C_MEMADD_SIZE_8BIT, &id, 1, 100);
 
-	  char idbuf[48];
-	  snprintf(idbuf, sizeof(idbuf), "BMP280 status=%d id=0x%02X\r\n", status, id);
-	  uart_send_string(idbuf);
 
 
 
@@ -139,8 +136,8 @@ int main(void)
 		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 
 		  char buf[32];
-		  //snprintf(buf, sizeof(buf), "uptime: %lu\r\n", uptime);
-		  //uart_send_string(buf);
+		  snprintf(buf, sizeof(buf), "uptime: %lu\r\n", uptime);
+		  uart_send_string(buf);
 
 
 
